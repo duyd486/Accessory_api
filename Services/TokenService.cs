@@ -25,7 +25,8 @@ public sealed class TokenService : ITokenService
         var key = JwtKeyProvider.CreateSigningKey(secret);
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var role = user.Role ?? 0;
+        // Default to normal user when role is NULL
+        var role = user.Role ?? 1;
 
         var claims = new List<Claim>
         {

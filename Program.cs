@@ -15,6 +15,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddSingleton<IPayOSService, MockPayOSService>();
 
 builder.Services.AddCors(options =>
 {
@@ -80,6 +81,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
+    c.SchemaFilter<Vibra_Dotnet_api.Swagger.ExamplesSchemaFilter>();
     c.AddSecurityDefinition("Bearer", new() 
     {
         Name = "Authorization",

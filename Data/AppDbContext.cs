@@ -12,6 +12,8 @@ public sealed class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Category> Categories => Set<Category>();
+    public DbSet<Bill> Bills => Set<Bill>();
+    public DbSet<BillDetail> BillDetails => Set<BillDetail>();
     public DbSet<PersonalAccessToken> PersonalAccessTokens => Set<PersonalAccessToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -69,6 +71,40 @@ public sealed class AppDbContext : DbContext
             entity.Property(x => x.Brand).HasColumnName("brand");
 
             entity.HasIndex(x => x.CategoryId);
+        });
+
+        modelBuilder.Entity<Bill>(entity =>
+        {
+            entity.ToTable("bills");
+
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.UserId).HasColumnName("user_id");
+            entity.Property(x => x.OrderCode).HasColumnName("order_code");
+            entity.Property(x => x.TotalPrice).HasColumnName("total_price");
+            entity.Property(x => x.Status).HasColumnName("status");
+            entity.Property(x => x.PaymentMethod).HasColumnName("payment_method");
+            entity.Property(x => x.Phone).HasColumnName("phone");
+            entity.Property(x => x.Address).HasColumnName("address");
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
+            entity.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+        });
+
+        modelBuilder.Entity<BillDetail>(entity =>
+        {
+            entity.ToTable("bill_details");
+
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.BillId).HasColumnName("bill_id");
+            entity.Property(x => x.ProductId).HasColumnName("product_id");
+            entity.Property(x => x.Quantity).HasColumnName("quantity");
+            entity.Property(x => x.TotalPrice).HasColumnName("total_price");
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
+            entity.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+
+            entity.HasIndex(x => x.BillId);
+            entity.HasIndex(x => x.ProductId);
         });
 
         modelBuilder.Entity<PersonalAccessToken>(entity =>

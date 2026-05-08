@@ -65,7 +65,8 @@ public sealed class SanctumAuthenticationHandler : AuthenticationHandler<Authent
             return AuthenticateResult.Fail("User not found.");
         }
 
-        var role = user.Role ?? 0;
+        // Default to normal user when role is NULL
+        var role = user.Role ?? 1;
 
         // Update last_used_at best-effort
         try
