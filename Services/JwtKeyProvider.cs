@@ -2,7 +2,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Vibra_Dotnet_api.Services;
+namespace Accessory_api.Services;
 
 public static class JwtKeyProvider
 {

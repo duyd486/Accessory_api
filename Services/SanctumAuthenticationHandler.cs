@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
-using Vibra_Dotnet_api.Data;
+using Accessory_api.Data;
 
-namespace Vibra_Dotnet_api.Services;
+namespace Accessory_api.Services;
 
 public sealed class SanctumAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {

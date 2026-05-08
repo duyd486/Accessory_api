@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
-using Vibra_Dotnet_api.Data;
-using Vibra_Dotnet_api.Services;
+using Accessory_api.Data;
+using Accessory_api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -81,7 +81,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SchemaFilter<Vibra_Dotnet_api.Swagger.ExamplesSchemaFilter>();
+    c.SchemaFilter<Accessory_api.Swagger.ExamplesSchemaFilter>();
     c.AddSecurityDefinition("Bearer", new() 
     {
         Name = "Authorization",

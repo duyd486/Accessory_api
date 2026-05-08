@@ -1,4 +1,4 @@
-namespace Vibra_Dotnet_api.Models;
+namespace Accessory_api.Models;
 
 public sealed class PersonalAccessToken
 {

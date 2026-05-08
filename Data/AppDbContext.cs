@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using Vibra_Dotnet_api.Models;
+using Accessory_api.Models;
 
-namespace Vibra_Dotnet_api.Data;
+namespace Accessory_api.Data;
 
 public sealed class AppDbContext : DbContext
 {

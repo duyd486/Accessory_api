@@ -1,4 +1,4 @@
-namespace Vibra_Dotnet_api.Contracts;
+namespace Accessory_api.Contracts;
 
 public sealed class ApiResponse<T>
 {

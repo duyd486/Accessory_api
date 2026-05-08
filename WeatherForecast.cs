@@ -1,4 +1,4 @@
-namespace Vibra_Dotnet_api
+namespace Accessory_api
 {
     public class WeatherForecast
     {

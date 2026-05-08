@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace Vibra_Dotnet_api.Controllers
+namespace Accessory_api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

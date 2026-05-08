@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Vibra_Dotnet_api.Contracts;
+using Accessory_api.Contracts;
 
-namespace Vibra_Dotnet_api.Controllers;
+namespace Accessory_api.Controllers;
 
 [ApiController]
 [Route("api/auth/google")]

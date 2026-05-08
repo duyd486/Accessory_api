@@ -1,9 +1,9 @@
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using Vibra_Dotnet_api.Contracts.Requests;
+using Accessory_api.Contracts.Requests;
 
-namespace Vibra_Dotnet_api.Swagger;
+namespace Accessory_api.Swagger;
 
 public sealed class ExamplesSchemaFilter : ISchemaFilter
 {

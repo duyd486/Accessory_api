@@ -1,4 +1,4 @@
-namespace Vibra_Dotnet_api.Services;
+namespace Accessory_api.Services;
 
 public interface IPayOSService
 {

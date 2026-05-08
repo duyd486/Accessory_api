@@ -2,12 +2,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using Vibra_Dotnet_api.Contracts;
-using Vibra_Dotnet_api.Contracts.Requests;
-using Vibra_Dotnet_api.Contracts.Responses;
-using Vibra_Dotnet_api.Data;
+using Accessory_api.Contracts;
+using Accessory_api.Contracts.Requests;
+using Accessory_api.Contracts.Responses;
+using Accessory_api.Data;
 
-namespace Vibra_Dotnet_api.Controllers;
+namespace Accessory_api.Controllers;
 
 [ApiController]
 [Route("api")]

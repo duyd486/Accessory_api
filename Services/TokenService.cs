@@ -1,9 +1,9 @@
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Vibra_Dotnet_api.Models;
+using Accessory_api.Models;
 
-namespace Vibra_Dotnet_api.Services;
+namespace Accessory_api.Services;
 
 public interface ITokenService
 {

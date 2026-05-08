@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Vibra_Dotnet_api.Data;
+using Accessory_api.Data;
 
-namespace Vibra_Dotnet_api.Controllers;
+namespace Accessory_api.Controllers;
 
 [ApiController]
 [Route("api")]
