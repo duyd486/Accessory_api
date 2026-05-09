@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -84,7 +84,7 @@ public sealed class ManageCategoryController : ControllerBase
     {
         if (!IsAdmin())
         {
-            return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Fail("Ch? admin m?i c� quy?n ch?nh s?a d? li?u!"));
+            return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Fail("Chỉ admin mới có quyền chỉnh sửa dữ liệu!"));
         }
 
         if (string.IsNullOrWhiteSpace(request.Title) || request.ParentId is null)
@@ -139,7 +139,7 @@ public sealed class ManageCategoryController : ControllerBase
     {
         if (!IsAdmin())
         {
-            return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Fail("Ch? admin m?i c� quy?n xo�!"));
+            return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Fail("Chỉ admin mới có quyền xoá!"));
         }
 
         if (categoryId is null)
@@ -167,7 +167,7 @@ public sealed class ManageCategoryController : ControllerBase
 
     private bool IsAdmin()
     {
-        var roleRaw = User.FindFirstValue("role");
+        var roleRaw = User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role);
         return int.TryParse(roleRaw, out var role) && role == 0;
     }
 }

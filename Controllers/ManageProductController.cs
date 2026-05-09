@@ -435,7 +435,7 @@ ORDER BY feedbacks.created_at DESC";
 
     private bool IsAdmin()
     {
-        var roleRaw = User.FindFirstValue("role");
+        var roleRaw = User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role);
         return int.TryParse(roleRaw, out var role) && role == 0;
     }
 }
