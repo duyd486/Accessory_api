@@ -10,5 +10,6 @@ public sealed record OrderListRow(
     string? user_name,
     long product_id,
     string? product_name,
-    int quantity
+    int quantity,
+    long? channel_id
 );

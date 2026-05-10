@@ -12,6 +12,7 @@ public sealed class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Category> Categories => Set<Category>();
+    public DbSet<Channel> Channels => Set<Channel>();
     public DbSet<Bill> Bills => Set<Bill>();
     public DbSet<BillDetail> BillDetails => Set<BillDetail>();
     public DbSet<PersonalAccessToken> PersonalAccessTokens => Set<PersonalAccessToken>();
@@ -51,6 +52,17 @@ public sealed class AppDbContext : DbContext
             entity.Property(x => x.DeletedAt).HasColumnName("deleted_at");
         });
 
+        modelBuilder.Entity<Channel>(entity =>
+        {
+            entity.ToTable("channels");
+
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.Name).HasColumnName("name");
+            entity.Property(x => x.Type).HasColumnName("type");
+
+        });
+
         modelBuilder.Entity<Product>(entity =>
         {
             entity.ToTable("products");
@@ -88,6 +100,7 @@ public sealed class AppDbContext : DbContext
             entity.Property(x => x.Address).HasColumnName("address");
             entity.Property(x => x.CreatedAt).HasColumnName("created_at");
             entity.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(x => x.ChannelId).HasColumnName("channel_id");
         });
 
         modelBuilder.Entity<BillDetail>(entity =>

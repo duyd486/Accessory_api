@@ -27,22 +27,23 @@ public sealed class ManageOrderController : ControllerBase
         {
             // Equivalent of the Laravel query builder joins + group by bill.
             FormattableString sql = $@"
-SELECT
-    bills.id AS id,
-    bills.order_code AS order_code,
-    bills.user_id AS user_id,
-    bills.status AS status,
-    bills.created_at AS created_at,
-    bills.total_price AS total_price,
-    users.name AS user_name,
-    products.id AS product_id,
-    products.name AS product_name,
-    bill_details.quantity AS quantity
-FROM bills
-INNER JOIN users ON users.id = bills.user_id
-INNER JOIN bill_details ON bill_details.bill_id = bills.id
-INNER JOIN products ON products.id = bill_details.product_id
-ORDER BY bills.created_at DESC";
+                        SELECT
+                            bills.id AS id,
+                            bills.order_code AS order_code,
+                            bills.user_id AS user_id,
+                            bills.status AS status,
+                            bills.created_at AS created_at,
+                            bills.total_price AS total_price,
+                            users.name AS user_name,
+                            products.id AS product_id,
+                            products.name AS product_name,
+                            bill_details.quantity AS quantity,
+                            bills.channel_id AS channel_id
+                        FROM bills
+                        INNER JOIN users ON users.id = bills.user_id
+                        INNER JOIN bill_details ON bill_details.bill_id = bills.id
+                        INNER JOIN products ON products.id = bill_details.product_id
+                        ORDER BY bills.created_at DESC";
 
             var rows = await _db.Database.SqlQuery<OrderListRow>(sql).ToListAsync();
 
@@ -58,6 +59,7 @@ ORDER BY bills.created_at DESC";
                         user_id: row.user_id,
                         user_name: row.user_name,
                         status: row.status,
+                        channel_id: row.channel_id,
                         created_at: row.created_at,
                         total_price: row.total_price,
                         products: new List<OrderBillProductDto>());
@@ -201,5 +203,6 @@ VALUES (0, {request.BillId!.Value}, {userId.Value}, {request.Score!.Value}, {req
         int status,
         DateTime? created_at,
         double? total_price,
+        long? channel_id,
         List<OrderBillProductDto> products);
 }

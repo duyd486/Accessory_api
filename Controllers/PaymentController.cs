@@ -23,6 +23,28 @@ public sealed class PaymentController : ControllerBase
         _payOS = payOS;
     }
 
+    [AllowAnonymous]
+    [HttpGet("channels")]
+    public async Task<ActionResult<ApiResponse<object>>> GetChannels()
+    {
+        try
+        {
+            var channels = await _db.Channels.AsNoTracking()
+                .Select(c => new
+                {
+                    id = c.Id,
+                    name = c.Name,
+                    type = c.Type
+                })
+                .ToListAsync();
+            return Ok(ApiResponse<object>.Ok(new { channels }));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ApiResponse<object>.Fail(ex.Message));
+        }
+    }
+
     [Authorize]
     [HttpPost("create-bill")]
     public async Task<ActionResult<ApiResponse<object>>> CreateBill([FromBody] CreateBillRequest request)
@@ -64,7 +86,8 @@ public sealed class PaymentController : ControllerBase
                 Address = request.Address,
                 Status = null,
                 CreatedAt = now,
-                UpdatedAt = now
+                UpdatedAt = now,
+                ChannelId = request.ChannelId,
             };
 
             _db.Bills.Add(bill);
@@ -132,6 +155,7 @@ public sealed class PaymentController : ControllerBase
                 phone = bill.Phone,
                 address = bill.Address,
                 status = bill.Status,
+                channel_id = 1,
                 checkout_url = checkoutUrl
             };
 

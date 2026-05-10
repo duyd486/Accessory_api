@@ -23,4 +23,5 @@ public sealed class Bill
     public string? Address { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public long? ChannelId { get; set; }
 }
