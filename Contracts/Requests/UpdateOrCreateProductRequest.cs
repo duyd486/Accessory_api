@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 namespace Accessory_api.Contracts.Requests;
 
 public sealed record UpdateOrCreateProductRequest(
+    int? Id,
     string? Name,
     [property: JsonPropertyName("category_id")] long? CategoryId,
     string? Description,

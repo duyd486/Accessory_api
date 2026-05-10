@@ -259,44 +259,58 @@ ORDER BY feedbacks.created_at DESC";
 
     [Authorize]
     [HttpPost("update-or-create-product")]
-    public async Task<ActionResult<ApiResponse<object>>> UpdateOrCreateProduct([FromBody] UpdateOrCreateProductRequest request)
+    public async Task<ActionResult<ApiResponse<object>>> UpdateOrCreateProduct(
+        [FromBody] UpdateOrCreateProductRequest request)
     {
-        //if (!IsAdmin())
-        //{
-        //    return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Fail("Chỉ admin mới có quyền chỉnh sửa dữ liệu!"));
-        //}
-
         if (string.IsNullOrWhiteSpace(request.Name) || request.CategoryId is null)
         {
             return BadRequest(ApiResponse<object>.Fail("Validation error."));
         }
 
         var now = DateTime.UtcNow;
+
         try
         {
-            var product = await _db.Products.FirstOrDefaultAsync(x => x.DeletedAt == null && x.Name == request.Name && x.CategoryId == request.CategoryId.Value);
+            Product? product = null;
 
-            if (product is null)
+            // UPDATE
+            if (request.Id != null)
+            {
+                product = await _db.Products.FirstOrDefaultAsync(x =>
+                    x.DeletedAt == null &&
+                    x.Id == request.Id.Value);
+
+                if (product == null)
+                {
+                    return NotFound(ApiResponse<object>.Fail("Không tìm thấy sản phẩm."));
+                }
+            }
+            // CREATE
+            else
             {
                 product = new Product
                 {
-                    Name = request.Name,
-                    CategoryId = request.CategoryId.Value,
                     CreatedAt = now
                 };
+
                 _db.Products.Add(product);
             }
 
             var baseUrl = (_configuration["App:BaseUrl"] ?? string.Empty).TrimEnd('/');
+
+            product.Name = request.Name;
+            product.CategoryId = request.CategoryId.Value;
             product.Description = request.Description;
             product.Brand = request.Brand;
             product.Price = request.Price ?? 0;
             product.Quantity = request.Quantity ?? 0;
             product.TotalSold = request.TotalSold ?? 0;
             product.Score = request.Score ?? 0;
+
             product.ThumbnailUrl = string.IsNullOrEmpty(baseUrl)
                 ? $"/uploads/products/thumbnail_urls/{request.Name}.jpg"
                 : $"{baseUrl}/uploads/products/thumbnail_urls/{request.Name}.jpg";
+
             product.UpdatedAt = now;
 
             await _db.SaveChangesAsync();
@@ -317,11 +331,17 @@ ORDER BY feedbacks.created_at DESC";
                 brand = product.Brand
             };
 
-            return Ok(ApiResponse<object>.Ok(result, "Cập nhật sản phẩm thành công!"));
+            return Ok(ApiResponse<object>.Ok(
+                result,
+                request.Id != null
+                    ? "Cập nhật sản phẩm thành công!"
+                    : "Tạo sản phẩm thành công!"));
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ApiResponse<object>.Fail(ex.Message));
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                ApiResponse<object>.Fail(ex.Message));
         }
     }
 
