@@ -260,7 +260,8 @@ ORDER BY feedbacks.created_at DESC";
     [Authorize]
     [HttpPost("update-or-create-product")]
     public async Task<ActionResult<ApiResponse<object>>> UpdateOrCreateProduct(
-        [FromBody] UpdateOrCreateProductRequest request)
+        [FromForm] UpdateOrCreateProductRequest request,
+        IFormFile? thumbnail)
     {
         if (string.IsNullOrWhiteSpace(request.Name) || request.CategoryId is null)
         {
@@ -296,8 +297,6 @@ ORDER BY feedbacks.created_at DESC";
                 _db.Products.Add(product);
             }
 
-            var baseUrl = (_configuration["App:BaseUrl"] ?? string.Empty).TrimEnd('/');
-
             product.Name = request.Name;
             product.CategoryId = request.CategoryId.Value;
             product.Description = request.Description;
@@ -306,14 +305,41 @@ ORDER BY feedbacks.created_at DESC";
             product.Quantity = request.Quantity ?? 0;
             product.TotalSold = request.TotalSold ?? 0;
             product.Score = request.Score ?? 0;
-
-            product.ThumbnailUrl = string.IsNullOrEmpty(baseUrl)
-                ? $"/uploads/products/thumbnail_urls/{request.Name}.jpg"
-                : $"{baseUrl}/uploads/products/thumbnail_urls/{request.Name}.jpg";
-
             product.UpdatedAt = now;
 
+            // Save trước để có Id
             await _db.SaveChangesAsync();
+
+            // Upload ảnh
+            if (thumbnail != null && thumbnail.Length > 0)
+            {
+                var uploadsFolder = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "uploads",
+                    "products");
+
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                var fileName = $"{product.Id}.png";
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                // Save file
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await thumbnail.CopyToAsync(stream);
+                }
+
+                var baseUrl = (_configuration["App:BaseUrl"] ?? string.Empty).TrimEnd('/');
+
+                product.ThumbnailUrl = string.IsNullOrEmpty(baseUrl)
+                    ? $"/uploads/products/{fileName}"
+                    : $"{baseUrl}/uploads/products/{fileName}";
+
+                await _db.SaveChangesAsync();
+            }
 
             var result = new
             {

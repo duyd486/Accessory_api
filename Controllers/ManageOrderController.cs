@@ -42,7 +42,6 @@ FROM bills
 INNER JOIN users ON users.id = bills.user_id
 INNER JOIN bill_details ON bill_details.bill_id = bills.id
 INNER JOIN products ON products.id = bill_details.product_id
-WHERE bills.status IN (3,4,5,6)
 ORDER BY bills.created_at DESC";
 
             var rows = await _db.Database.SqlQuery<OrderListRow>(sql).ToListAsync();
@@ -94,10 +93,10 @@ ORDER BY bills.created_at DESC";
         {
             errors["status"] = new[] { "The status field is required." };
         }
-        else if (request.Status is not (3 or 4 or 5 or 6))
-        {
-            errors["status"] = new[] { "The selected status is invalid." };
-        }
+        //else if (request.Status is not (3 or 4 or 5 or 6))
+        //{
+        //    errors["status"] = new[] { "The selected status is invalid." };
+        //}
 
         if (errors.Count > 0)
         {
