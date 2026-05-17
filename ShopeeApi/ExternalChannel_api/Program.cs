@@ -5,8 +5,7 @@ builder.WebHost.UseUrls("http://localhost:8001");
 // Add services to the container.
 
 builder.Services.AddControllers();
-builder.Services.AddSingleton<ExternalChannel_api.Services.ShopeeOrderStore>();
-builder.Services.AddHttpClient<ExternalChannel_api.Services.ShopeeOrderProxy>();
+builder.Services.AddSingleton<ExternalChannel_api.Services.ShopeeOrderFileStore>();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 

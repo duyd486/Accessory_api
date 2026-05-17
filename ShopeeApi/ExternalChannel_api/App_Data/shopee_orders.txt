@@ -1,0 +1,44 @@
+[
+  {
+    "orderSn": "260517-SIM-cdebdf511",
+    "buyerName": "Nguyen Van A",
+    "buyerPhone": "0901234567",
+    "shippingAddress": "12 Nguyen Hue, Q1, HCM",
+    "totalAmount": 249000,
+    "currency": "VND",
+    "status": "NEW",
+    "createdAt": "2026-05-17T09:57:01.1126097+00:00",
+    "items": [
+      {
+        "sku": "SKU-001",
+        "name": "Op lung iPhone",
+        "quantity": 2,
+        "unitPrice": 75000
+      },
+      {
+        "sku": "SKU-002",
+        "name": "Cap sac Type-C",
+        "quantity": 1,
+        "unitPrice": 99000
+      }
+    ]
+  },
+  {
+    "orderSn": "260517-SIM-80e882966",
+    "buyerName": "Nguyen Van B",
+    "buyerPhone": "0901234567",
+    "shippingAddress": "12 Nguyen Hue, Q1, HCM",
+    "totalAmount": 150000,
+    "currency": "VND",
+    "status": "NEW",
+    "createdAt": "2026-05-17T09:57:26.4984158+00:00",
+    "items": [
+      {
+        "sku": "SKU-001",
+        "name": "Op lung iPhone",
+        "quantity": 2,
+        "unitPrice": 75000
+      }
+    ]
+  }
+]

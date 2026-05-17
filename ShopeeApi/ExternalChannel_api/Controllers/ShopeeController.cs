@@ -8,36 +8,29 @@ namespace ExternalChannel_api.Controllers
     [Route("shopee")]
     public class ShopeeController : ControllerBase
     {
-        private readonly ShopeeOrderStore _orderStore;
-        private readonly ShopeeOrderProxy _orderProxy;
+        private readonly ShopeeOrderFileStore _orderStore;
 
-        public ShopeeController(ShopeeOrderStore orderStore, ShopeeOrderProxy orderProxy)
+        public ShopeeController(ShopeeOrderFileStore orderStore)
         {
             _orderStore = orderStore;
-            _orderProxy = orderProxy;
         }
 
         // Lấy danh sách đơn bán
         [HttpGet("orders")]
         [ProducesResponseType(typeof(IReadOnlyCollection<ShopeeOrder>), StatusCodes.Status200OK)]
-        public IActionResult GetOrders()
+        public async Task<IActionResult> GetOrders(CancellationToken cancellationToken)
         {
-            return Ok(_orderStore.GetAll());
+            return Ok(await _orderStore.GetAllAsync(cancellationToken));
         }
 
         // Tạo 1 đơn bán
         [HttpPost("orders")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ShopeeOrder), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateOrder([FromBody] CreateShopeeOrderRequest request, CancellationToken cancellationToken)
         {
-            // giả lập: chỉ forward sang API khác, không xử lý phức tạp ở đây
-            var resp = await _orderProxy.ForwardCreateAsync(request, cancellationToken);
-
-            // Trả nguyên trạng status code + body từ API đích
-            var body = await resp.Content.ReadAsStringAsync(cancellationToken);
-            return StatusCode((int)resp.StatusCode, body);
+            var created = await _orderStore.CreateAsync(request, cancellationToken);
+            return Created($"{Request.PathBase}/shopee/orders/{created.OrderSn}", created);
         }
     }
 }
