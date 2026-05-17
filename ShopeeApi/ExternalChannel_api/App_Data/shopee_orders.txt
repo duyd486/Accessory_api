@@ -52,5 +52,23 @@
         "unitPrice": 75000
       }
     ]
+  },
+  {
+    "orderSn": "260517-SHOPEE-4afd58",
+    "buyerName": "Nguyen Van E",
+    "buyerPhone": "0901234547",
+    "shippingAddress": "12 Nguyen Hue, Q1, HCM",
+    "totalAmount": 150000,
+    "currency": "VND",
+    "status": "CONFIRMED",
+    "createdAt": "2026-05-17T16:22:50.4087863+00:00",
+    "items": [
+      {
+        "sku": "SKU-001",
+        "name": "Op lung iPhone",
+        "quantity": 2,
+        "unitPrice": 75000
+      }
+    ]
   }
 ]

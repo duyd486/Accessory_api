@@ -6,6 +6,7 @@ using Accessory_api.Contracts;
 using Accessory_api.Contracts.Requests;
 using Accessory_api.Contracts.Responses;
 using Accessory_api.Data;
+using Accessory_api.Models;
 
 namespace Accessory_api.Controllers;
 
@@ -18,6 +19,77 @@ public sealed class ManageUserController : ControllerBase
     public ManageUserController(AppDbContext db)
     {
         _db = db;
+    }
+
+    [Authorize]
+    [HttpPost("create-staff")]
+    public async Task<ActionResult<ApiResponse<object>>> CreateStaff([FromBody] CreateStaffRequest request)
+    {
+        if (!IsAdmin())
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Fail("Ch? admin m?i có quy?n t?o nhân viên!"));
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Name)
+            || string.IsNullOrWhiteSpace(request.Email)
+            || string.IsNullOrWhiteSpace(request.Password)
+            || string.IsNullOrWhiteSpace(request.PasswordConfirmation))
+        {
+            return BadRequest(ApiResponse<object>.Fail("Validation error."));
+        }
+
+        if (!IsValidEmail(request.Email))
+        {
+            return BadRequest(ApiResponse<object>.Fail("Validation error."));
+        }
+
+        if (request.Password.Length < 8)
+        {
+            return BadRequest(ApiResponse<object>.Fail("Validation error."));
+        }
+
+        if (request.Password != request.PasswordConfirmation)
+        {
+            return BadRequest(ApiResponse<object>.Fail("Validation error."));
+        }
+
+        try
+        {
+            var exists = await _db.Users.AnyAsync(x => x.Email == request.Email);
+            if (exists)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Fail("This email is already associated with an account."));
+            }
+
+            var staff = new User
+            {
+                Name = request.Name,
+                Email = request.Email,
+                Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                Role = 2,
+                Phone = request.Phone,
+                Address = request.Address
+            };
+
+            _db.Users.Add(staff);
+            await _db.SaveChangesAsync();
+
+            var dto = new
+            {
+                staff.Id,
+                staff.Name,
+                staff.Email,
+                role = staff.Role,
+                staff.Phone,
+                staff.Address
+            };
+
+            return Ok(ApiResponse<object>.Ok(new { user = dto }, "T?o nhân viên thành công."));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ApiResponse<object>.Fail(ex.Message));
+        }
     }
 
     [Authorize]
@@ -218,6 +290,12 @@ public sealed class ManageUserController : ControllerBase
         {
             return false;
         }
+    }
+
+    private bool IsAdmin()
+    {
+        var roleRaw = User.FindFirstValue("role") ?? User.FindFirstValue(ClaimTypes.Role);
+        return int.TryParse(roleRaw, out var role) && role == 0;
     }
 
     private async Task<List<OrderHistoryItemDto>> QueryOrdersByStatusAsync(long userId, int[] statuses)

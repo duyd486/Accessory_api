@@ -97,113 +97,6 @@ public sealed class ManageOrderController : ControllerBase
     }
 
     [AllowAnonymous]
-    [HttpGet("list-orders")]
-    public async Task<IActionResult> ListOrder()
-    {
-        try
-        {
-            // Equivalent of the Laravel query builder joins + group by bill.
-            FormattableString sql = $@"
-                        SELECT
-                            bills.id AS id,
-                            bills.order_code AS order_code,
-                            bills.user_id AS user_id,
-                            bills.status AS status,
-                            bills.created_at AS created_at,
-                            bills.total_price AS total_price,
-                            users.name AS user_name,
-                            products.id AS product_id,
-                            products.name AS product_name,
-                            bill_details.quantity AS quantity,
-                            bills.channel_id AS channel_id
-                        FROM bills
-                        LEFT JOIN users ON users.id = bills.user_id
-                        INNER JOIN bill_details ON bill_details.bill_id = bills.id
-                        INNER JOIN products ON products.id = bill_details.product_id
-                        ORDER BY bills.created_at DESC";
-
-            var rows = await _db.Database.SqlQuery<OrderListRow>(sql).ToListAsync();
-
-            var bills = new Dictionary<long, OrderBillDto>();
-
-            foreach (var row in rows)
-            {
-                if (!bills.TryGetValue(row.id, out var bill))
-                {
-                    bill = new OrderBillDto(
-                        id: row.id,
-                        order_code: row.order_code,
-                        user_id: row.user_id,
-                        user_name: row.user_name,
-                        status: row.status,
-                        channel_id: row.channel_id,
-                        created_at: row.created_at,
-                        total_price: row.total_price,
-                        products: new List<OrderBillProductDto>());
-                    bills[row.id] = bill;
-                }
-
-                bill.products.Add(new OrderBillProductDto(
-                    product_id: row.product_id,
-                    product_name: row.product_name,
-                    quantity: row.quantity));
-            }
-
-            return Ok(new { data = bills.Values.ToList() });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, new { message = ex.Message });
-        }
-    }
-
-    [AllowAnonymous]
-    [HttpGet("shopee/orders")]
-    public async Task<IActionResult> GetShopeeOrders(CancellationToken cancellationToken)
-    {
-        try
-        {
-            var client = _httpClientFactory.CreateClient();
-            var orders = await client.GetFromJsonAsync<List<ShopeeOrderDto>>("http://localhost:8001/api/shopee/orders", cancellationToken);
-
-            long? shopeeChannelId = await _db.Channels.AsNoTracking()
-                .Where(c => c.Name != null && c.Name.ToLower() == "shopee")
-                .Select(c => c.Id)
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (shopeeChannelId == 0)
-            {
-                shopeeChannelId = null;
-            }
-
-            var data = (orders ?? new List<ShopeeOrderDto>())
-                .Select(o => new OrderBillDto(
-                    id: 0,
-                    order_code: o.OrderSn,
-                    user_id: 0,
-                    user_name: o.BuyerName,
-                    status: MapShopeeStatusToBillStatus(o.Status),
-                    created_at: o.CreatedAt?.UtcDateTime,
-                    total_price: o.TotalAmount,
-                    channel_id: shopeeChannelId,
-                    products: (o.Items ?? new List<ShopeeOrderItemDto>())
-                        .Select(i => new OrderBillProductDto(
-                            product_id: TryParseProductIdFromSku(i.Sku, out var pid) ? pid : 0,
-                            product_name: i.Name,
-                            quantity: i.Quantity))
-                        .ToList()))
-                .OrderByDescending(x => x.created_at)
-                .ToList();
-
-            return Ok(new { data });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Không thể lấy đơn hàng Shopee", error = ex.Message });
-        }
-    }
-
-    [AllowAnonymous]
     [HttpPost("shopee/upsert-order")]
     public async Task<IActionResult> UpsertShopeeOrder([FromBody] UpsertShopeeOrderRequest request)
     {
@@ -353,6 +246,113 @@ public sealed class ManageOrderController : ControllerBase
         {
             await tx.RollbackAsync();
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Lỗi hệ thống", error = ex.Message });
+        }
+    }
+
+    [AllowAnonymous]
+    [HttpGet("shopee/orders")]
+    public async Task<IActionResult> GetShopeeOrders(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var client = _httpClientFactory.CreateClient();
+            var orders = await client.GetFromJsonAsync<List<ShopeeOrderDto>>("http://localhost:8001/api/shopee/orders", cancellationToken);
+
+            long? shopeeChannelId = await _db.Channels.AsNoTracking()
+                .Where(c => c.Name != null && c.Name.ToLower() == "shopee")
+                .Select(c => c.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (shopeeChannelId == 0)
+            {
+                shopeeChannelId = null;
+            }
+
+            var data = (orders ?? new List<ShopeeOrderDto>())
+                .Select(o => new OrderBillDto(
+                    id: 0,
+                    order_code: o.OrderSn,
+                    user_id: 0,
+                    user_name: o.BuyerName,
+                    status: MapShopeeStatusToBillStatus(o.Status),
+                    created_at: o.CreatedAt?.UtcDateTime,
+                    total_price: o.TotalAmount,
+                    channel_id: shopeeChannelId,
+                    products: (o.Items ?? new List<ShopeeOrderItemDto>())
+                        .Select(i => new OrderBillProductDto(
+                            product_id: TryParseProductIdFromSku(i.Sku, out var pid) ? pid : 0,
+                            product_name: i.Name,
+                            quantity: i.Quantity))
+                        .ToList()))
+                .OrderByDescending(x => x.created_at)
+                .ToList();
+
+            return Ok(new { data });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Không thể lấy đơn hàng Shopee", error = ex.Message });
+        }
+    }
+
+    [AllowAnonymous]
+    [HttpGet("list-orders")]
+    public async Task<IActionResult> ListOrder()
+    {
+        try
+        {
+            // Equivalent of the Laravel query builder joins + group by bill.
+            FormattableString sql = $@"
+                        SELECT
+                            bills.id AS id,
+                            bills.order_code AS order_code,
+                            bills.user_id AS user_id,
+                            bills.status AS status,
+                            bills.created_at AS created_at,
+                            bills.total_price AS total_price,
+                            users.name AS user_name,
+                            products.id AS product_id,
+                            products.name AS product_name,
+                            bill_details.quantity AS quantity,
+                            bills.channel_id AS channel_id
+                        FROM bills
+                        LEFT JOIN users ON users.id = bills.user_id
+                        INNER JOIN bill_details ON bill_details.bill_id = bills.id
+                        INNER JOIN products ON products.id = bill_details.product_id
+                        ORDER BY bills.created_at DESC";
+
+            var rows = await _db.Database.SqlQuery<OrderListRow>(sql).ToListAsync();
+
+            var bills = new Dictionary<long, OrderBillDto>();
+
+            foreach (var row in rows)
+            {
+                if (!bills.TryGetValue(row.id, out var bill))
+                {
+                    bill = new OrderBillDto(
+                        id: row.id,
+                        order_code: row.order_code,
+                        user_id: row.user_id,
+                        user_name: row.user_name,
+                        status: row.status,
+                        channel_id: row.channel_id,
+                        created_at: row.created_at,
+                        total_price: row.total_price,
+                        products: new List<OrderBillProductDto>());
+                    bills[row.id] = bill;
+                }
+
+                bill.products.Add(new OrderBillProductDto(
+                    product_id: row.product_id,
+                    product_name: row.product_name,
+                    quantity: row.quantity));
+            }
+
+            return Ok(new { data = bills.Values.ToList() });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = ex.Message });
         }
     }
 
