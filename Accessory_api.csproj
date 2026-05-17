@@ -18,4 +18,10 @@
     <Folder Include="Uploads\Product\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="ShopeeApi\ExternalChannel_api\**\*.cs" />
+    <Content Remove="ShopeeApi\ExternalChannel_api\**\*" />
+    <None Remove="ShopeeApi\ExternalChannel_api\**\*" />
+  </ItemGroup>
+
 </Project>

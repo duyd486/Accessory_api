@@ -15,7 +15,7 @@ public sealed class Bill
 
     public long Id { get; set; }
     public long? UserId { get; set; }
-    public int? OrderCode { get; set; }
+    public string? OrderCode { get; set; }
     public double? TotalPrice { get; set; }
     public int? Status { get; set; }
     public int? PaymentMethod { get; set; }

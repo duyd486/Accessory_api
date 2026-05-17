@@ -2,7 +2,7 @@ namespace Accessory_api.Contracts.Responses;
 
 public sealed record OrderListRow(
     long id,
-    int? order_code,
+    string? order_code,
     long user_id,
     int status,
     DateTime? created_at,

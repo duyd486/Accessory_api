@@ -3,6 +3,7 @@ namespace ExternalChannel_api.Models;
 public sealed class CreateShopeeOrderRequest
 {
     public string? OrderSn { get; init; }
+  public string Status { get; init; } = "NEW";
     public string BuyerName { get; init; } = string.Empty;
     public string BuyerPhone { get; init; } = string.Empty;
     public string ShippingAddress { get; init; } = string.Empty;

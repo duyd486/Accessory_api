@@ -79,7 +79,7 @@ public sealed class PaymentController : ControllerBase
             var bill = new Bill
             {
                 UserId = userId.Value,
-                OrderCode = orderCode,
+                OrderCode = orderCode.ToString(),
                 PaymentMethod = paymentMethod,
                 TotalPrice = request.TotalPrice,
                 Phone = request.Phone,
@@ -184,7 +184,7 @@ public sealed class PaymentController : ControllerBase
                 return StatusCode(StatusCodes.Status500InternalServerError, ApiResponse<object>.Fail("Internal Server Error"));
             }
 
-            var bill = await _db.Bills.FirstOrDefaultAsync(x => x.OrderCode == orderCode.Value);
+            var bill = await _db.Bills.FirstOrDefaultAsync(x => x.OrderCode == orderCode.Value.ToString());
             if (bill is not null)
             {
                 bill.Status = data.Status switch

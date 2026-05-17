@@ -1,37 +1,49 @@
 [
   {
-    "orderSn": "260517-SIM-cdebdf511",
-    "buyerName": "Nguyen Van A",
-    "buyerPhone": "0901234567",
+    "orderSn": "260517-SHOPEE-60935c",
+    "buyerName": "Nguyen Van E",
+    "buyerPhone": "0901234547",
     "shippingAddress": "12 Nguyen Hue, Q1, HCM",
-    "totalAmount": 249000,
+    "totalAmount": 150000,
     "currency": "VND",
-    "status": "NEW",
-    "createdAt": "2026-05-17T09:57:01.1126097+00:00",
+    "status": "CONFIRMED",
+    "createdAt": "2026-05-17T14:17:06.1456709+00:00",
     "items": [
       {
         "sku": "SKU-001",
         "name": "Op lung iPhone",
         "quantity": 2,
         "unitPrice": 75000
-      },
-      {
-        "sku": "SKU-002",
-        "name": "Cap sac Type-C",
-        "quantity": 1,
-        "unitPrice": 99000
       }
     ]
   },
   {
-    "orderSn": "260517-SIM-80e882966",
-    "buyerName": "Nguyen Van B",
-    "buyerPhone": "0901234567",
+    "orderSn": "260517-SHOPEE-334a55",
+    "buyerName": "Nguyen Van E",
+    "buyerPhone": "0901234547",
     "shippingAddress": "12 Nguyen Hue, Q1, HCM",
     "totalAmount": 150000,
     "currency": "VND",
-    "status": "NEW",
-    "createdAt": "2026-05-17T09:57:26.4984158+00:00",
+    "status": "CONFIRMED",
+    "createdAt": "2026-05-17T15:04:20.1612021+00:00",
+    "items": [
+      {
+        "sku": "SKU-001",
+        "name": "Op lung iPhone",
+        "quantity": 2,
+        "unitPrice": 75000
+      }
+    ]
+  },
+  {
+    "orderSn": "260517-SHOPEE-2043e3",
+    "buyerName": "Nguyen Van E",
+    "buyerPhone": "0901234547",
+    "shippingAddress": "12 Nguyen Hue, Q1, HCM",
+    "totalAmount": 150000,
+    "currency": "VND",
+    "status": "CONFIRMED",
+    "createdAt": "2026-05-17T15:05:44.6100582+00:00",
     "items": [
       {
         "sku": "SKU-001",

@@ -53,7 +53,7 @@ public sealed class ShopeeOrderFileStore
         }
 
         var orderSn = string.IsNullOrWhiteSpace(request.OrderSn)
-            ? $"{DateTimeOffset.UtcNow:yyMMdd}-SIM-{Guid.NewGuid():N}"[..20]
+            ? $"{DateTimeOffset.UtcNow:yyMMdd}-SHOPEE-{Guid.NewGuid():N}"[..20]
             : request.OrderSn.Trim();
 
         var items = request.Items
@@ -75,7 +75,7 @@ public sealed class ShopeeOrderFileStore
             ShippingAddress: request.ShippingAddress,
             TotalAmount: total,
             Currency: string.IsNullOrWhiteSpace(request.Currency) ? "VND" : request.Currency,
-            Status: "NEW",
+          Status: string.IsNullOrWhiteSpace(request.Status) ? "NEW" : request.Status,
             CreatedAt: DateTimeOffset.UtcNow,
             Items: items
         );

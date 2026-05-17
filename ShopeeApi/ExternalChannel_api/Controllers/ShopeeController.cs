@@ -9,10 +9,12 @@ namespace ExternalChannel_api.Controllers
     public class ShopeeController : ControllerBase
     {
         private readonly ShopeeOrderFileStore _orderStore;
+        private readonly ShopeeUpsertOrderClient _upsertClient;
 
-        public ShopeeController(ShopeeOrderFileStore orderStore)
+        public ShopeeController(ShopeeOrderFileStore orderStore, ShopeeUpsertOrderClient upsertClient)
         {
             _orderStore = orderStore;
+            _upsertClient = upsertClient;
         }
 
         // Lấy danh sách đơn bán
@@ -30,6 +32,27 @@ namespace ExternalChannel_api.Controllers
         public async Task<IActionResult> CreateOrder([FromBody] CreateShopeeOrderRequest request, CancellationToken cancellationToken)
         {
             var created = await _orderStore.CreateAsync(request, cancellationToken);
+
+            var upsertRequest = new UpsertShopeeOrderRequest(
+                OrderSn: created.OrderSn,
+                BuyerName: created.BuyerName,
+                BuyerPhone: created.BuyerPhone,
+                ShippingAddress: created.ShippingAddress,
+                TotalAmount: (double)created.TotalAmount,
+                Currency: created.Currency,
+                Status: created.Status,
+                CreatedAt: created.CreatedAt,
+                Items: created.Items
+                    .Select(i => new UpsertShopeeOrderItemRequest(
+                        Sku: i.Sku,
+                        Name: i.Name,
+                        Quantity: i.Quantity,
+                        UnitPrice: (double)i.UnitPrice
+                    ))
+                    .ToList()
+            );
+
+            _ = await _upsertClient.UpsertAsync(upsertRequest, cancellationToken);
             return Created($"{Request.PathBase}/shopee/orders/{created.OrderSn}", created);
         }
     }
