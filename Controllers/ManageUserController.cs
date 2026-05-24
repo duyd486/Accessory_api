@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+Ôªøusing Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -22,12 +22,84 @@ public sealed class ManageUserController : ControllerBase
     }
 
     [Authorize]
+    [HttpPost("create-admin")]
+    public async Task<ActionResult<ApiResponse<object>>> CreateAdmin([FromBody] CreateStaffRequest request)
+    {
+        if (!IsAdmin())
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Fail("Ch? admin m?i c√≥ quy?n t?o nh√¢n vi√™n!"));
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Name)
+            || string.IsNullOrWhiteSpace(request.Email)
+            || string.IsNullOrWhiteSpace(request.Password)
+            || string.IsNullOrWhiteSpace(request.PasswordConfirmation))
+        {
+            return BadRequest(ApiResponse<object>.Fail("Validation error."));
+        }
+
+        if (!IsValidEmail(request.Email))
+        {
+            return BadRequest(ApiResponse<object>.Fail("Validation error."));
+        }
+
+        if (request.Password.Length < 8)
+        {
+            return BadRequest(ApiResponse<object>.Fail("Validation error."));
+        }
+
+        if (request.Password != request.PasswordConfirmation)
+        {
+            return BadRequest(ApiResponse<object>.Fail("Validation error."));
+        }
+
+        try
+        {
+            var exists = await _db.Users.AnyAsync(x => x.Email == request.Email);
+            if (exists)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Fail("This email is already associated with an account."));
+            }
+
+            var staff = new User
+            {
+                Name = request.Name,
+                Email = request.Email,
+                Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                Role = 0,
+                Phone = request.Phone,
+                Address = request.Address
+            };
+
+            _db.Users.Add(staff);
+            await _db.SaveChangesAsync();
+
+            var dto = new
+            {
+                staff.Id,
+                staff.Name,
+                staff.Email,
+                role = staff.Role,
+                staff.Phone,
+                staff.Address
+            };
+
+            return Ok(ApiResponse<object>.Ok(new { user = dto }, "T·∫°o admin th√†nh c√¥ng."));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ApiResponse<object>.Fail(ex.Message));
+        }
+    }
+
+
+    [Authorize]
     [HttpPost("create-staff")]
     public async Task<ActionResult<ApiResponse<object>>> CreateStaff([FromBody] CreateStaffRequest request)
     {
         if (!IsAdmin())
         {
-            return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Fail("Ch? admin m?i cÛ quy?n t?o nh‚n viÍn!"));
+            return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Fail("Ch·ªâ admin m·ªõi c√≥ quy·ªÅn t·∫°o nh√¢n vi√™n!"));
         }
 
         if (string.IsNullOrWhiteSpace(request.Name)
@@ -84,7 +156,7 @@ public sealed class ManageUserController : ControllerBase
                 staff.Address
             };
 
-            return Ok(ApiResponse<object>.Ok(new { user = dto }, "T?o nh‚n viÍn th‡nh cÙng."));
+            return Ok(ApiResponse<object>.Ok(new { user = dto }, "T·∫°o nh√¢n vi√™n th√†nh c√¥ng."));
         }
         catch (Exception ex)
         {
@@ -209,7 +281,7 @@ public sealed class ManageUserController : ControllerBase
             if (errors.Count > 0)
             {
                 return StatusCode(StatusCodes.Status422UnprocessableEntity,
-                    new ApiResponse<object> { Status = false, Data = errors, Message = "D? li?u khÙng h?p l?." });
+                    new ApiResponse<object> { Status = false, Data = errors, Message = "D? li?u kh√¥ng h?p l?." });
             }
 
             user.Name = request.Name;
@@ -228,25 +300,25 @@ public sealed class ManageUserController : ControllerBase
                     || string.IsNullOrWhiteSpace(request.NewPasswordConfirmation))
                 {
                     return StatusCode(StatusCodes.Status422UnprocessableEntity,
-                        new ApiResponse<object> { Status = false, Data = null, Message = "Vui lÚng nh?p ??y ?? m?t kh?u." });
+                        new ApiResponse<object> { Status = false, Data = null, Message = "Vui l√≤ng nh?p ??y ?? m?t kh?u." });
                 }
 
                 if (string.IsNullOrEmpty(user.Password) || !BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.Password))
                 {
                     return StatusCode(StatusCodes.Status422UnprocessableEntity,
-                        new ApiResponse<object> { Status = false, Data = null, Message = "M?t kh?u hi?n t?i khÙng ?˙ng." });
+                        new ApiResponse<object> { Status = false, Data = null, Message = "M?t kh?u hi?n t?i kh√¥ng ?√∫ng." });
                 }
 
                 if (request.NewPassword != request.NewPasswordConfirmation)
                 {
                     return StatusCode(StatusCodes.Status422UnprocessableEntity,
-                        new ApiResponse<object> { Status = false, Data = null, Message = "X·c nh?n m?t kh?u m?i khÙng kh?p." });
+                        new ApiResponse<object> { Status = false, Data = null, Message = "X√°c nh?n m?t kh?u m?i kh√¥ng kh?p." });
                 }
 
                 if (request.NewPassword.Length < 8)
                 {
                     return StatusCode(StatusCodes.Status422UnprocessableEntity,
-                        new ApiResponse<object> { Status = false, Data = null, Message = "M?t kh?u m?i ph?i Ìt nh?t 8 k˝ t?." });
+                        new ApiResponse<object> { Status = false, Data = null, Message = "M?t kh?u m?i ph?i √≠t nh?t 8 k√Ω t?." });
                 }
 
                 user.Password = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
@@ -265,7 +337,7 @@ public sealed class ManageUserController : ControllerBase
                 user.Address
             };
 
-            return Ok(ApiResponse<object>.Ok(new { user = userDto }, "C?p nh?t thÙng tin th‡nh cÙng."));
+            return Ok(ApiResponse<object>.Ok(new { user = userDto }, "C?p nh?t th√¥ng tin th√†nh c√¥ng."));
         }
         catch (Exception ex)
         {

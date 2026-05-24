@@ -2,7 +2,12 @@ using System.Text.Json.Serialization;
 
 namespace Accessory_api.Contracts.Requests;
 
-public sealed record UpdateOrCreateCategoryRequest(
-    string? Title,
-    [property: JsonPropertyName("parent_id")] long? ParentId
-);
+public sealed class UpdateOrCreateCategoryRequest
+{
+    public long? Id { get; set; }
+
+    public string? Title { get; set; }
+
+    [JsonPropertyName("parent_id")]
+    public long? ParentId { get; set; }
+}

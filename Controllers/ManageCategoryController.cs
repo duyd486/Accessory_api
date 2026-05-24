@@ -80,7 +80,9 @@ public sealed class ManageCategoryController : ControllerBase
 
     [Authorize]
     [HttpPost("update-or-create-cate")]
-    public async Task<ActionResult<ApiResponse<object>>> UpdateOrCreateCate([FromBody] UpdateOrCreateCategoryRequest request)
+    public async Task<ActionResult<ApiResponse<object>>> UpdateOrCreateCate(
+        [FromForm] UpdateOrCreateCategoryRequest request,
+        IFormFile? thumbnail)
     {
         if (!IsAdmin())
         {
@@ -95,27 +97,72 @@ public sealed class ManageCategoryController : ControllerBase
         var now = DateTime.UtcNow;
         try
         {
-            var category = await _db.Categories
-                .FirstOrDefaultAsync(x => x.DeletedAt == null && x.Title == request.Title && x.ParentId == request.ParentId.Value);
+            Category? category = null;
 
-            if (category is null)
+            // UPDATE
+            if (request.Id is not null)
+            {
+                category = await _db.Categories.FirstOrDefaultAsync(x =>
+                    x.DeletedAt == null &&
+                    x.Id == request.Id.Value);
+
+                if (category is null)
+                {
+                    return NotFound(ApiResponse<object>.Fail("Không tìm thấy danh mục."));
+                }
+            }
+            // CREATE
+            else
             {
                 category = new Category
                 {
-                    Title = request.Title,
-                    ParentId = request.ParentId.Value,
                     CreatedAt = now
                 };
+
                 _db.Categories.Add(category);
             }
 
-            var baseUrl = (_configuration["App:BaseUrl"] ?? string.Empty).TrimEnd('/');
-            category.ThumbnailUrl = string.IsNullOrEmpty(baseUrl)
-                ? $"/uploads/products/thumbnail_urls/{request.Title}.jpg"
-                : $"{baseUrl}/uploads/products/thumbnail_urls/{request.Title}.jpg";
+            category.Title = request.Title;
+            category.ParentId = request.ParentId.Value;
             category.UpdatedAt = now;
 
+            // Save trước để có Id khi tạo mới
             await _db.SaveChangesAsync();
+
+            // Upload ảnh (nếu có)
+            if (thumbnail != null && thumbnail.Length > 0)
+            {
+                var uploadsFolder = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "uploads",
+                    "categories");
+
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                var ext = Path.GetExtension(thumbnail.FileName);
+                if (string.IsNullOrWhiteSpace(ext))
+                {
+                    ext = ".png";
+                }
+
+                var fileName = $"{category.Id}{ext}";
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await thumbnail.CopyToAsync(stream);
+                }
+
+                var baseUrl = (_configuration["App:BaseUrl"] ?? string.Empty).TrimEnd('/');
+                category.ThumbnailUrl = string.IsNullOrEmpty(baseUrl)
+                    ? $"/uploads/categories/{fileName}"
+                    : $"{baseUrl}/uploads/categories/{fileName}";
+
+                await _db.SaveChangesAsync();
+            }
 
             var dto = new
             {
@@ -125,7 +172,11 @@ public sealed class ManageCategoryController : ControllerBase
                 thumbnail_url = category.ThumbnailUrl
             };
 
-            return Ok(ApiResponse<object>.Ok(dto));
+            return Ok(ApiResponse<object>.Ok(
+                dto,
+                request.Id is not null
+                    ? "Cập nhật danh mục thành công!"
+                    : "Tạo danh mục thành công!"));
         }
         catch (Exception ex)
         {
