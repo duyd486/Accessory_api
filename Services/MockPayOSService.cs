@@ -81,13 +81,13 @@ public sealed class MockPayOSService : IPayOSService
                 return null;
             }
 
-            return new PayOSCreateLinkResult(res.CheckoutUrl);
+            return new PayOSCreateLinkResult(res.CheckoutUrl, res.QrCode);
         }
         catch
         {
             // Fallback to mock URL if PayOS is not configured / network issues.
             var baseUrl = (_configuration["PayOS:MockCheckoutBaseUrl"] ?? "https://payos.local/checkout").TrimEnd('/');
-            return new PayOSCreateLinkResult($"{baseUrl}/{orderCode}");
+            return new PayOSCreateLinkResult($"{baseUrl}/{orderCode}", null);
         }
     }
 

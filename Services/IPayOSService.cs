@@ -8,6 +8,6 @@ public interface IPayOSService
 
 public sealed record PayOSItem(string Name, int Quantity, double Price);
 
-public sealed record PayOSCreateLinkResult(string CheckoutUrl);
+public sealed record PayOSCreateLinkResult(string CheckoutUrl, string qrCode);
 
 public sealed record PayOSPaymentStatusResult(string Status);

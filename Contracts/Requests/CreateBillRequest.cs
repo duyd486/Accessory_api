@@ -10,7 +10,8 @@ public sealed record CreateBillItemRequest(
 );
 
 public sealed record CreateBillRequest(
-    long? ChannelId,
+    [property: JsonPropertyName("channelId")] long? ChannelId,
+    [property: JsonPropertyName("channel_id")] long? ChannelIdSnake,
     [property: JsonPropertyName("payment_method")] string? PaymentMethod,
     [property: JsonPropertyName("total_price")] double? TotalPrice,
     string? Phone,

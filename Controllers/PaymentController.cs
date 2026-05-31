@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -7,6 +7,7 @@ using Accessory_api.Contracts.Requests;
 using Accessory_api.Data;
 using Accessory_api.Models;
 using Accessory_api.Services;
+using QRCoder;
 
 namespace Accessory_api.Controllers;
 
@@ -16,6 +17,8 @@ public sealed class PaymentController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IPayOSService _payOS;
+
+    private const long STORE_CHANNEL_ID = 1;
 
     public PaymentController(AppDbContext db, IPayOSService payOS)
     {
@@ -67,7 +70,9 @@ public sealed class PaymentController : ControllerBase
                 return BadRequest(ApiResponse<object>.Fail("Validation error."));
             }
 
-            var paymentMethod = request.PaymentMethod.Equals("online", StringComparison.OrdinalIgnoreCase)
+            var channelId = request.ChannelId ?? request.ChannelIdSnake;
+
+            var paymentMethod = IsOnlinePaymentMethod(request.PaymentMethod)
                 ? Bill.PAYMENT_METHOD_ONLINE
                 : Bill.PAYMENT_METHOD_OFFLINE;
 
@@ -87,7 +92,7 @@ public sealed class PaymentController : ControllerBase
                 Status = null,
                 CreatedAt = now,
                 UpdatedAt = now,
-                ChannelId = request.ChannelId,
+                ChannelId = channelId,
             };
 
             _db.Bills.Add(bill);
@@ -120,6 +125,7 @@ public sealed class PaymentController : ControllerBase
             await _db.SaveChangesAsync();
 
             string? checkoutUrl = null;
+            string? qrImageUrl = null;
 
             if (paymentMethod == Bill.PAYMENT_METHOD_ONLINE)
             {
@@ -131,10 +137,19 @@ public sealed class PaymentController : ControllerBase
                 if (res is null)
                 {
                     await tx.RollbackAsync();
-                    return StatusCode(StatusCodes.Status500InternalServerError, ApiResponse<object>.Fail("Kh�ng th? t?o link thanh to�n online"));
+                    return StatusCode(StatusCodes.Status500InternalServerError, ApiResponse<object>.Fail("Không th? t?o link thanh toán online"));
                 }
 
                 checkoutUrl = res.CheckoutUrl;
+
+                if (channelId == STORE_CHANNEL_ID)
+                {
+                    qrImageUrl = await SaveQrToUploadsAsync(orderCode, res.qrCode);
+                    if(qrImageUrl == null)
+                    {
+                        qrImageUrl = checkoutUrl; // fallback to checkout URL if QR generation fails
+                    }
+                }
             }
             else
             {
@@ -155,8 +170,9 @@ public sealed class PaymentController : ControllerBase
                 phone = bill.Phone,
                 address = bill.Address,
                 status = bill.Status,
-                channel_id = 1,
-                checkout_url = checkoutUrl
+                channel_id = bill.ChannelId,
+                checkout_url = checkoutUrl,
+                qr_image_url = qrImageUrl
             };
 
             return Ok(ApiResponse<object>.Ok(new { bill = billDto }));
@@ -164,6 +180,33 @@ public sealed class PaymentController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, ApiResponse<object>.Fail(ex.Message));
+        }
+    }
+
+    private async Task<string?> SaveQrToUploadsAsync(int orderCode, string qrCodeString)
+    {
+        try
+        {
+            var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+            var tempQrsDir = Path.Combine(uploadsRoot, "tempqrs");
+            Directory.CreateDirectory(tempQrsDir);
+
+
+            var generator = new QRCodeGenerator();
+            var data = generator.CreateQrCode(qrCodeString, QRCodeGenerator.ECCLevel.Q);
+            var qr = new PngByteQRCode(data);
+
+            byte[] bytes = qr.GetGraphic(20);
+
+            var fileName = $"payos_{orderCode}.png";
+            var filePath = Path.Combine(tempQrsDir, fileName);
+            await System.IO.File.WriteAllBytesAsync(filePath, bytes);
+
+            return $"http://localhost:8000/uploads/tempqrs/{fileName}";
+        }
+        catch
+        {
+            return null;
         }
     }
 
@@ -217,5 +260,17 @@ public sealed class PaymentController : ControllerBase
         // Similar to Laravel's microtime-based 6-digit generation.
         var value = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         return (int)(value % 1_000_000);
+    }
+
+    private static bool IsOnlinePaymentMethod(string? paymentMethod)
+    {
+        if (string.IsNullOrWhiteSpace(paymentMethod))
+        {
+            return false;
+        }
+
+        return paymentMethod.Equals("online", StringComparison.OrdinalIgnoreCase)
+            || paymentMethod.Equals("Chuyển khoản", StringComparison.OrdinalIgnoreCase)
+            || paymentMethod.Equals("Chuyen khoan", StringComparison.OrdinalIgnoreCase);
     }
 }
