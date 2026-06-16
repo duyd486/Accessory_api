@@ -76,10 +76,42 @@ public sealed class PaymentController : ControllerBase
                 ? Bill.PAYMENT_METHOD_ONLINE
                 : Bill.PAYMENT_METHOD_OFFLINE;
 
+            var itemRequirements = request.Items
+                .GroupBy(x => x.Id)
+                .Select(g => new { ProductId = g.Key, Quantity = g.Sum(x => x.Quantity) })
+                .ToList();
+
             var orderCode = GenerateOrderCode();
             var now = DateTime.UtcNow;
 
             await using var tx = await _db.Database.BeginTransactionAsync();
+
+            var products = await _db.Products
+                .Where(p => itemRequirements.Select(x => x.ProductId).Contains(p.Id))
+                .ToListAsync();
+
+            if (products.Count != itemRequirements.Count)
+            {
+                await tx.RollbackAsync();
+                return BadRequest(ApiResponse<object>.Fail("Some products do not exist."));
+            }
+
+            var insufficientProduct = products.FirstOrDefault(p =>
+                p.Quantity < itemRequirements.First(x => x.ProductId == p.Id).Quantity);
+
+            if (insufficientProduct is not null)
+            {
+                await tx.RollbackAsync();
+                return BadRequest(ApiResponse<object>.Fail($"Product '{insufficientProduct.Name}' is out of stock or does not have enough quantity."));
+            }
+
+            foreach (var product in products)
+            {
+                var requiredQuantity = itemRequirements.First(x => x.ProductId == product.Id).Quantity;
+                product.Quantity -= requiredQuantity;
+                product.UpdatedAt = now;
+                product.TotalSold += requiredQuantity;
+            }
 
             var bill = new Bill
             {
@@ -153,7 +185,14 @@ public sealed class PaymentController : ControllerBase
             }
             else
             {
-                bill.Status = Bill.STATUS_PREPARING;
+                if(channelId == STORE_CHANNEL_ID)
+                {
+                    bill.Status = Bill.STATUS_DONE;
+                }
+                else
+                {
+                    bill.Status = Bill.STATUS_PREPARING;
+                }
                 bill.UpdatedAt = now;
                 await _db.SaveChangesAsync();
             }
