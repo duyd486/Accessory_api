@@ -31,6 +31,7 @@ public sealed class ManageDashboardController : ControllerBase
             var countCustomers = await _db.Database.SqlQuery<int>($"SELECT COUNT(1) AS [Value] FROM users WHERE role = 1").FirstAsync();
             var countProducts = await _db.Database.SqlQuery<int>($"SELECT COUNT(1) AS [Value] FROM products WHERE deleted_at IS NULL").FirstAsync();
             var countOrders = await _db.Database.SqlQuery<int>($"SELECT COUNT(1) AS [Value] FROM bills WHERE status IN (4,5,6) AND MONTH(created_at) = {month} AND YEAR(created_at) = {year}").FirstAsync();
+            var countStaff = await _db.Database.SqlQuery<int>($"SELECT COUNT(1) AS [Value] FROM users WHERE role = 2").FirstAsync();
 
             return Ok(new
             {
@@ -39,7 +40,8 @@ public sealed class ManageDashboardController : ControllerBase
                 {
                     count_customers = countCustomers,
                     count_products = countProducts,
-                    count_orders = countOrders
+                    count_orders = countOrders,
+                    count_staff = countStaff
                 }
             });
         }

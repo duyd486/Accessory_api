@@ -463,6 +463,48 @@ VALUES (0, {request.BillId!.Value}, {userId.Value}, {request.Score!.Value}, {req
         }
     }
 
+    [Authorize]
+    [HttpGet("orders/order-history")]
+    public async Task<IActionResult> GetOrderHistory(CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized(new { message = "Unauthenticated." });
+        }
+        try
+        {
+            var orders = await _db.Bills
+                .Where(b => b.UserId == userId.Value)
+                .OrderByDescending(b => b.CreatedAt)
+                .Select(b => new
+                {
+                    id = b.Id,
+                    order_code = b.OrderCode,
+                    status = b.Status,
+                    total_price = b.TotalPrice,
+                    created_at = b.CreatedAt,
+                    channel_id = b.ChannelId,
+                    products = (from bd in _db.BillDetails
+                                join p in _db.Products on bd.ProductId equals p.Id
+                                where bd.BillId == b.Id
+                                select new
+                                {
+                                    product_id = p.Id,
+                                    product_name = p.Name,
+                                    quantity = bd.Quantity,
+                                    total_price = bd.TotalPrice
+                                }).ToList()
+                })
+                .ToListAsync(cancellationToken);
+            return Ok(new { data = orders });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Internal Server Error", error = ex.Message });
+        }
+    }
+
     private long? GetUserId()
     {
         var raw = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");

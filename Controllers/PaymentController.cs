@@ -70,7 +70,7 @@ public sealed class PaymentController : ControllerBase
                 return BadRequest(ApiResponse<object>.Fail("Validation error."));
             }
 
-            var channelId = request.ChannelId ?? request.ChannelIdSnake;
+            var channelId = request.ChannelId ?? 1;
 
             var paymentMethod = IsOnlinePaymentMethod(request.PaymentMethod)
                 ? Bill.PAYMENT_METHOD_ONLINE
